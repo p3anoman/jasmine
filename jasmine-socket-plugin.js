@@ -389,27 +389,27 @@ function SocketPlugin() {
             method: httpMethod,
             headers: headers,
             body: data,
-            mode: 'cors'
+            mode: 'no-cors'
           };
 
           fetch(this._getURL(targetURL), init)
             .then(thisSocket._handleFetchAPIResponse.bind(thisSocket))
             .catch(function (e) {
-              var url = thisSocket._getURL(targetURL, true);
-              console.warn('Retrying with CORS proxy: ' + url);
-              fetch(url, init)
-                .then(function (res) {
-                  console.log('Success: ' + url);
-                  thisSocket._handleFetchAPIResponse(res);
-                  plugin.needProxy.add(thisSocket._hostAndPort());
-                })
-                .catch(function (e) {
-                  // KLUDGE! This is just a workaround for a broken
-                  // proxy server - we should remove it when
-                  // crossorigin.me is fixed
-                  console.warn('Fetch API failed, retrying with XMLHttpRequest');
-                  thisSocket._performXMLHTTPRequest(targetURL, httpMethod, data, requestLines);
-                });
+              // var url = thisSocket._getURL(targetURL, true);
+              // console.warn('Retrying with CORS proxy: ' + url);
+              // fetch(url, init)
+              //   .then(function (res) {
+              //     console.log('Success: ' + url);
+              //     thisSocket._handleFetchAPIResponse(res);
+              //     plugin.needProxy.add(thisSocket._hostAndPort());
+              //   })
+              //   .catch(function (e) {
+              //     // KLUDGE! This is just a workaround for a broken
+              //     // proxy server - we should remove it when
+              //     // crossorigin.me is fixed
+              //     console.warn('Fetch API failed, retrying with XMLHttpRequest');
+              //     thisSocket._performXMLHTTPRequest(targetURL, httpMethod, data, requestLines);
+              //   });
             });
         },
 
@@ -438,77 +438,77 @@ function SocketPlugin() {
           });
         },
 
-        _performXMLHTTPRequest: function (targetURL, httpMethod, data, requestLines) {
-          var thisSocket = this;
-
-          var contentType;
-          for (var i = 1; i < requestLines.length; i++) {
-            var line = requestLines[i];
-            if (line.match(/Content-Type:/i)) {
-              contentType = encodeURIComponent(line.substr(14));
-              break;
-            }
-          }
-
-          var httpRequest = new XMLHttpRequest();
-          httpRequest.open(httpMethod, this._getURL(targetURL));
-          if (contentType !== undefined) {
-            httpRequest.setRequestHeader('Content-type', contentType);
-          }
-          if (typeof SqueakJS === "object" && SqueakJS.options.ajax) {
-            httpRequest.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-          }
-
-          httpRequest.responseType = "arraybuffer";
-
-          httpRequest.onload = function (oEvent) {
-            thisSocket._handleXMLHTTPResponse(this);
-          };
-
-          httpRequest.onerror = function (e) {
-            var url = thisSocket._getURL(targetURL, true);
-            console.warn('Retrying with CORS proxy: ' + url);
-            var retry = new XMLHttpRequest();
-            retry.open(httpMethod, url);
-            retry.responseType = httpRequest.responseType;
-            if (typeof SqueakJS === "object" && SqueakJS.options.ajaxx) {
-              retry.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            }
-            retry.onload = function (oEvent) {
-              console.log('Success: ' + url);
-              thisSocket._handleXMLHTTPResponse(this);
-              plugin.needProxy.add(thisSocket._hostAndPort());
-            };
-            retry.onerror = function () {
-              thisSocket._otherEndClosed();
-              console.error("Failed to download:\n" + url);
-            };
-            retry.send(data);
-          };
-
-          httpRequest.send(data);
-        },
-
-        _handleXMLHTTPResponse: function (response) {
-          this.responseReceived = true;
-
-          var content = response.response;
-          if (!content) {
-            this._otherEndClosed();
-            return;
-          }
-          // Recreate header
-          var header = new TextEncoder('utf-8').encode(
-            'HTTP/1.0 ' + response.status + ' ' + response.statusText +
-            '\r\n' + response.getAllResponseHeaders() + '\r\n');
-          // Concat header and response
-          var res = new Uint8Array(header.byteLength + content.byteLength);
-          res.set(header, 0);
-          res.set(new Uint8Array(content), header.byteLength);
-
-          this.response = [res];
-          this._signalReadSemaphore();
-        },
+        // _performXMLHTTPRequest: function (targetURL, httpMethod, data, requestLines) {
+        //   var thisSocket = this;
+        //
+        //   var contentType;
+        //   for (var i = 1; i < requestLines.length; i++) {
+        //     var line = requestLines[i];
+        //     if (line.match(/Content-Type:/i)) {
+        //       contentType = encodeURIComponent(line.substr(14));
+        //       break;
+        //     }
+        //   }
+        //
+        //   var httpRequest = new XMLHttpRequest();
+        //   httpRequest.open(httpMethod, this._getURL(targetURL));
+        //   if (contentType !== undefined) {
+        //     httpRequest.setRequestHeader('Content-type', contentType);
+        //   }
+        //   if (typeof SqueakJS === "object" && SqueakJS.options.ajax) {
+        //     httpRequest.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        //   }
+        //
+        //   httpRequest.responseType = "arraybuffer";
+        //
+        //   httpRequest.onload = function (oEvent) {
+        //     thisSocket._handleXMLHTTPResponse(this);
+        //   };
+        //
+        //   httpRequest.onerror = function (e) {
+        //     var url = thisSocket._getURL(targetURL, true);
+        //     console.warn('Retrying with CORS proxy: ' + url);
+        //     var retry = new XMLHttpRequest();
+        //     retry.open(httpMethod, url);
+        //     retry.responseType = httpRequest.responseType;
+        //     if (typeof SqueakJS === "object" && SqueakJS.options.ajaxx) {
+        //       retry.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        //     }
+        //     retry.onload = function (oEvent) {
+        //       console.log('Success: ' + url);
+        //       thisSocket._handleXMLHTTPResponse(this);
+        //       plugin.needProxy.add(thisSocket._hostAndPort());
+        //     };
+        //     retry.onerror = function () {
+        //       thisSocket._otherEndClosed();
+        //       console.error("Failed to download:\n" + url);
+        //     };
+        //     retry.send(data);
+        //   };
+        //
+        //   httpRequest.send(data);
+        // },
+        //
+        // _handleXMLHTTPResponse: function (response) {
+        //   this.responseReceived = true;
+        //
+        //   var content = response.response;
+        //   if (!content) {
+        //     this._otherEndClosed();
+        //     return;
+        //   }
+        //   // Recreate header
+        //   var header = new TextEncoder('utf-8').encode(
+        //     'HTTP/1.0 ' + response.status + ' ' + response.statusText +
+        //     '\r\n' + response.getAllResponseHeaders() + '\r\n');
+        //   // Concat header and response
+        //   var res = new Uint8Array(header.byteLength + content.byteLength);
+        //   res.set(header, 0);
+        //   res.set(new Uint8Array(content), header.byteLength);
+        //
+        //   this.response = [res];
+        //   this._signalReadSemaphore();
+        // },
 
         _performWebSocketRequest: function (targetURL, httpMethod, data, requestLines) {
           var url = this._getURL(targetURL);
@@ -908,7 +908,7 @@ function SocketPlugin() {
           var thisSocket = this;
           var init = {
             method: "GET",
-            mode: "cors",
+            mode: "no-cors",
             credentials: "omit",
             cache: "no-store", // do not use the browser cache for DNS requests (a separate cache is kept)
             referrer: "no-referrer",
